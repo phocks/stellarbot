@@ -1,13 +1,13 @@
 {
   "name": "stellarbot",
   "version": "1.0.0",
-  "description": "",
+  "description": "A bot that deals in Stellar.",
   "main": "index.js",
   "scripts": {
     "start": "ts-node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Joshua Byrd",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^10.0.0",
