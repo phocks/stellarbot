@@ -25,11 +25,11 @@ const main = async () => {
     console.log("Type:", balance.asset_type, ", Balance:", balance.balance);
   });
 
-  
   var lastCursor = 0; // or load where you left off
 
-  var txHandler = function (txResponse: any) {
-    console.log(txResponse);
+  var txHandler = async function (txResponse: any) {
+    const result = await txResponse.account();
+    console.log(result);
   };
 
   var es = server
