@@ -15,7 +15,8 @@
     "node-fetch": "^2.6.1",
     "stellar-sdk": "^8.2.5",
     "ts-node": "^10.2.1",
-    "twitter-lite": "^1.1.0"
+    "twitter-lite": "^1.1.0",
+    "typescript": "^4.3.5"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.5.12"
