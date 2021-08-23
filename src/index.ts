@@ -6,6 +6,9 @@ import fetch from "node-fetch";
 const sqlite3 = require("sqlite3").verbose();
 import { open } from "sqlite";
 import SQL from "sql-template-strings";
+var dayjs = require("dayjs");
+var utc = require("dayjs/plugin/utc");
+dayjs.extend(utc);
 
 const DB_TABLE_NAME = "key_value";
 
@@ -14,6 +17,8 @@ const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
 
 const main = async () => {
   let err, result;
+
+  console.log(dayjs.utc());
 
   // const [verifyError, verifyResult] = await to(
   //   client.get("account/verify_credentials")
@@ -96,6 +101,8 @@ const main = async () => {
       pagingToken,
       "paging_token"
     );
+
+    // Check if not old
   };
 
   // Listen for transactions

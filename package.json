@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "await-to-js": "^3.0.0",
+    "dayjs": "^1.10.6",
     "dotenv": "^10.0.0",
     "eventsource": "^1.1.0",
     "lowdb": "^2.1.0",
