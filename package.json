@@ -15,6 +15,7 @@
     "eventsource": "^1.1.0",
     "lowdb": "^2.1.0",
     "node-fetch": "^2.6.1",
+    "sql-template-strings": "^2.2.2",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2",
     "stellar-base": "^5.3.2",

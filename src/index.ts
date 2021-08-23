@@ -5,12 +5,16 @@ import to from "await-to-js";
 import fetch from "node-fetch";
 const sqlite3 = require("sqlite3").verbose();
 import { open } from "sqlite";
+import SQL from "sql-template-strings";
+
+const DB_TABLE_NAME = "key_value";
 
 const accountAddress = process.env.stellar_public;
-
 const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
 
 const main = async () => {
+  let err, result;
+
   // const [verifyError, verifyResult] = await to(
   //   client.get("account/verify_credentials")
   // );
@@ -20,17 +24,40 @@ const main = async () => {
   //   return;
   // }
 
+  // Set up local database file if it doesn't exist
   const db = await open({
     filename: "./db/database.db",
     driver: sqlite3.Database,
   });
 
-  await db.exec("CREATE TABLE IF NOT EXISTS tbl (name TEXT , value TEXT)");
-  await db.exec('INSERT INTO tbl VALUES ("cursor", "1")');
+  // Create database table if it doesn't exist
+  await db.exec(
+    `CREATE TABLE IF NOT EXISTS ${DB_TABLE_NAME} (
+      id INTEGER PRIMARY KEY,
+      name TEXT UNIQUE,
+      count TEXT
+      )`
+  );
 
-  // const result = await db.get("SELECT col FROM tbl WHERE col = ?", "test");
+  // Insert row if it doesn't exist
+  await db.exec(
+    `INSERT OR IGNORE INTO ${DB_TABLE_NAME} (name, count) VALUES ("cursor", "4731829894516736")`
+  );
 
-  // console.log(result);
+  let lastCursor;
+
+  [err, result] = await to(
+    db.get(`SELECT * FROM ${DB_TABLE_NAME} WHERE name = ?`, "cursor")
+  );
+
+  if (err) {
+    console.error(err);
+    return;
+  } else {
+    if (result) {
+      lastCursor = result.count;
+    }
+  }
 
   // const result2 = await db.run(
   //   'UPDATE tbl SET col = ? WHERE col = ?',
@@ -47,11 +74,9 @@ const main = async () => {
     console.log("Type:", balance.asset_type, ", Balance:", balance.balance);
   });
 
-  let lastCursor = 0; // or load where you left off
-
   var txHandler = async function (txResponse: any) {
-    // const result = await txResponse;
-    // console.log(result);
+    const result = await txResponse;
+    console.log(result);
   };
 
   var es = server
