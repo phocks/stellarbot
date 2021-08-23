@@ -69,7 +69,15 @@ const main = async () => {
   // console.log(result2)
 
   // the JS SDK uses promises for most actions, such as retrieving an account
-  const account = await server.loadAccount(accountAddress);
+  const [accountError, account]: [Error | null, any] = await to(
+    server.loadAccount(accountAddress)
+  );
+
+  if (accountError) {
+    console.error(accountError);
+    return;
+  }
+
   console.log("Balances for account: " + accountAddress);
   account.balances.forEach(function (balance: any) {
     console.log("Type:", balance.asset_type, ", Balance:", balance.balance);
