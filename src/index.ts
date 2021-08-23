@@ -25,8 +25,20 @@ const main = async () => {
     driver: sqlite3.Database,
   });
 
-  await db.exec("CREATE TABLE tbl (col TEXT)");
-  await db.exec('INSERT INTO tbl VALUES ("test")');
+  await db.exec("CREATE TABLE IF NOT EXISTS tbl (name TEXT , value TEXT)");
+  await db.exec('INSERT INTO tbl VALUES ("cursor", "1")');
+
+  // const result = await db.get("SELECT col FROM tbl WHERE col = ?", "test");
+
+  // console.log(result);
+
+  // const result2 = await db.run(
+  //   'UPDATE tbl SET col = ? WHERE col = ?',
+  //   'foo',
+  //   'test'
+  // )
+
+  // console.log(result2)
 
   // the JS SDK uses promises for most actions, such as retrieving an account
   const account = await server.loadAccount(accountAddress);
@@ -38,8 +50,8 @@ const main = async () => {
   let lastCursor = 0; // or load where you left off
 
   var txHandler = async function (txResponse: any) {
-    const result = await txResponse;
-    console.log(result);
+    // const result = await txResponse;
+    // console.log(result);
   };
 
   var es = server
