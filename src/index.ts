@@ -41,13 +41,14 @@ const main = async () => {
 
   // Insert row if it doesn't exist
   await db.exec(
-    `INSERT OR IGNORE INTO ${DB_TABLE_NAME} (name, count) VALUES ("cursor", "4731829894516736")`
+    `INSERT OR IGNORE INTO ${DB_TABLE_NAME}
+    (name, count) VALUES ("paging_token", "4726048868536320")`
   );
 
-  let lastCursor;
+  let pagingToken: string = "0";
 
   [err, result] = await to(
-    db.get(`SELECT * FROM ${DB_TABLE_NAME} WHERE name = ?`, "cursor")
+    db.get(`SELECT * FROM ${DB_TABLE_NAME} WHERE name = ?`, "paging_token")
   );
 
   if (err) {
@@ -55,7 +56,7 @@ const main = async () => {
     return;
   } else {
     if (result) {
-      lastCursor = result.count;
+      pagingToken = result.count;
     }
   }
 
@@ -77,12 +78,23 @@ const main = async () => {
   var txHandler = async function (txResponse: any) {
     const result = await txResponse;
     console.log(result);
+    console.log("Paging token:", result.paging_token);
+
+    pagingToken = result.paging_token;
+
+    // Update paging token in database
+    await db.run(
+      `UPDATE ${DB_TABLE_NAME} SET count = ? WHERE name = ?`,
+      pagingToken,
+      "paging_token"
+    );
   };
 
+  // Listen for transactions
   var es = server
     .transactions()
     .forAccount(accountAddress)
-    .cursor(lastCursor)
+    .cursor(pagingToken)
     .stream({
       onmessage: txHandler,
     });
