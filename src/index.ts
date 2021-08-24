@@ -2,21 +2,19 @@ require("dotenv").config();
 import { client } from "./client";
 import StellarSdk from "stellar-sdk";
 import to from "await-to-js";
-import fetch from "node-fetch";
+// import fetch from "node-fetch";
 const sqlite3 = require("sqlite3").verbose();
 import { open } from "sqlite";
-import SQL from "sql-template-strings";
+// import SQL from "sql-template-strings";
 const dayjs = require("dayjs");
 
 const DB_TABLE_NAME = "key_value";
 
 const accountAddress = process.env.stellar_public;
-const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
+const server = new StellarSdk.Server("https://horizon.stellar.org");
 
 const main = async () => {
-  let err, result;
-
-  // Is date in the past over a certain amount of time?
+  // Check if date in the past
   function isStale(dateString: string, minutesAgo: number = 30) {
     let now = dayjs();
     let date = dayjs(dateString);
@@ -56,26 +54,18 @@ const main = async () => {
 
   let pagingToken: string = "0";
 
-  [err, result] = await to(
+  const [dbError, dbResult] = await to(
     db.get(`SELECT * FROM ${DB_TABLE_NAME} WHERE name = ?`, "paging_token")
   );
 
-  if (err) {
-    console.error(err);
+  if (dbError) {
+    console.error(dbError);
     return;
   } else {
-    if (result) {
-      pagingToken = result.count;
+    if (dbResult) {
+      pagingToken = dbResult.count;
     }
   }
-
-  // const result2 = await db.run(
-  //   'UPDATE tbl SET col = ? WHERE col = ?',
-  //   'foo',
-  //   'test'
-  // )
-
-  // console.log(result2)
 
   // the JS SDK uses promises for most actions, such as retrieving an account
   const [accountError, account]: [Error | null, any] = await to(
@@ -90,30 +80,44 @@ const main = async () => {
   console.log("Balances for account: " + accountAddress);
   account.balances.forEach(function (balance: any) {
     console.log("Type:", balance.asset_type, ", Balance:", balance.balance);
+
+    if (balance.asset_type === "native") {
+      // client
+      //   .post("account/update_profile", {
+      //     description: `XLM balance: ${balance.balance}`,
+      //   })
+      //   .then(() => {
+      //     console.log("Profile updated");
+      //   });
+    }
   });
 
-  var txHandler = async function (txResponse: any) {
-    const result = await txResponse;
-    console.log(result);
-    console.log("Paging token:", result.paging_token);
+  // Handle streaming messages from Horizon
+  const handleMessage = async function (payment: any) {
+    const transaction = await payment.transaction();
+    console.log("Paging token:", payment.paging_token);
 
-    pagingToken = result.paging_token;
-    const created_at: string = result.created_at;
-    const memo: string = result.memo;
+    pagingToken = payment.paging_token;
+    const created_at: string = payment.created_at;
+    const memo: string = transaction.memo;
+
+    console.log("Memo:", memo);
 
     // Check if not old
     if (isStale(created_at, 30)) {
-      console.log("Transaction is stale. Not processing.");
+      console.log("Payment is stale. Not processing.");
     } else {
-      // Tweet it out
-      const [tweetError, tweetResult] = await to(
-        client.post("statuses/update", {
-          status: memo,
-        })
-      );
+      // Tweet something here
+      
+      // const [tweetError, tweetResult] = await to(
+      //   client.post("statuses/update", {
+      //     status: memo,
+      //   })
+      // );
     }
 
     // Update paging token in database
+    // so we don't keep processing old messages
     await db.run(
       `UPDATE ${DB_TABLE_NAME} SET count = ? WHERE name = ?`,
       pagingToken,
@@ -122,12 +126,12 @@ const main = async () => {
   };
 
   // Listen for transactions
-  var es = server
-    .transactions()
+  const es = server
+    .payments()
     .forAccount(accountAddress)
     .cursor(pagingToken)
     .stream({
-      onmessage: txHandler,
+      onmessage: handleMessage,
     });
 
   // const tweet = await client.post("statuses/update", {
