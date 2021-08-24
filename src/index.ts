@@ -6,9 +6,7 @@ import fetch from "node-fetch";
 const sqlite3 = require("sqlite3").verbose();
 import { open } from "sqlite";
 import SQL from "sql-template-strings";
-var dayjs = require("dayjs");
-var utc = require("dayjs/plugin/utc");
-dayjs.extend(utc);
+const dayjs = require("dayjs");
 
 const DB_TABLE_NAME = "key_value";
 
@@ -18,7 +16,13 @@ const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
 const main = async () => {
   let err, result;
 
-  console.log(dayjs.utc().unix());
+  // Is date in the past over a certain amount of time?
+  function isStale(dateString: string, minutesAgo: number = 30) {
+    let now = dayjs();
+    let date = dayjs(dateString);
+    let diff = now.diff(date, "minute");
+    return diff > minutesAgo;
+  }
 
   // const [verifyError, verifyResult] = await to(
   //   client.get("account/verify_credentials")
@@ -47,7 +51,7 @@ const main = async () => {
   // Insert row if it doesn't exist
   await db.exec(
     `INSERT OR IGNORE INTO ${DB_TABLE_NAME}
-    (name, count) VALUES ("paging_token", "4726048868536320")`
+    (name, count) VALUES ("paging_token", "0")`
   );
 
   let pagingToken: string = "0";
@@ -94,6 +98,20 @@ const main = async () => {
     console.log("Paging token:", result.paging_token);
 
     pagingToken = result.paging_token;
+    const created_at: string = result.created_at;
+    const memo: string = result.memo;
+
+    // Check if not old
+    if (isStale(created_at, 30)) {
+      console.log("Transaction is stale. Not processing.");
+    } else {
+      // Tweet it out
+      const [tweetError, tweetResult] = await to(
+        client.post("statuses/update", {
+          status: memo,
+        })
+      );
+    }
 
     // Update paging token in database
     await db.run(
@@ -101,8 +119,6 @@ const main = async () => {
       pagingToken,
       "paging_token"
     );
-
-    // Check if not old
   };
 
   // Listen for transactions
@@ -113,10 +129,6 @@ const main = async () => {
     .stream({
       onmessage: txHandler,
     });
-
-  // const pair = StellarSdk.Keypair.random();
-  // console.log(pair.publicKey());
-  // console.log(pair.secret());
 
   // const tweet = await client.post("statuses/update", {
   //   status: "Hello world!!",
