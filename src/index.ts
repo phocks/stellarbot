@@ -18,7 +18,7 @@ const server = new StellarSdk.Server("https://horizon-testnet.stellar.org");
 const main = async () => {
   let err, result;
 
-  console.log(dayjs.utc());
+  console.log(dayjs.utc().unix());
 
   // const [verifyError, verifyResult] = await to(
   //   client.get("account/verify_credentials")
