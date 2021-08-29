@@ -64,6 +64,9 @@ const main = async () => {
   } else {
     if (dbResult) {
       pagingToken = dbResult.count;
+      
+      // Override paging token (for testing)
+      pagingToken = "0";
     }
   }
 
