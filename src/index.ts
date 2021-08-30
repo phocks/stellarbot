@@ -99,6 +99,7 @@ const main = async () => {
     pagingToken = payment.paging_token;
     const created_at: string = payment.created_at;
     const memo: string = transaction.memo;
+    const transactionId = transaction.id;
 
     console.log("Created at:", created_at);
     console.log("Paging token:", payment.paging_token);
@@ -106,15 +107,17 @@ const main = async () => {
     console.log("Amount:", payment.amount);
     console.log("Asset type", payment.asset_type);
     console.log("Asset code", payment.asset_code);
-    console.log("Transaction ID:", transaction.id);
+    console.log("Transaction ID:", transactionId);
+
+    let doTweet = true;
+    if (isStale(created_at, 30)) doTweet = false;
 
     // Check if we want to tweet
-    if (false && isStale(created_at, 30)) {
+    if (!doTweet) {
       console.log("Payment is stale. Not processing.");
     } else {
       // Tweet something here
-      const url =
-        "https://stellar.expert/explorer/public/tx/175c03de47abf1d0a7a633ab156d02e37074c3e48d21932efa96938419c149e3";
+      const url = `https://stellar.expert/explorer/public/tx/${transactionId}`;
       const [tweetError, tweetResult] = await to(
         client.post("statuses/update", {
           status: `URL: ${url}`,
