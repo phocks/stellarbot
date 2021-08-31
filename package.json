@@ -4,8 +4,10 @@
   "description": "A bot that deals in Stellar.",
   "main": "src/index.js",
   "scripts": {
-    "start": "ts-node src/.",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node src/.",
+    "start": "node dist/.",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "author": "Joshua Byrd",
   "license": "ISC",

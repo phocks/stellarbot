@@ -7,7 +7,7 @@ const sqlite3 = require("sqlite3").verbose();
 import { open } from "sqlite";
 // import SQL from "sql-template-strings";
 // const dayjs = require("dayjs");
-import isStale from "../lib/isStale";
+import isStale from "./lib/isStale";
 
 const DB_TABLE_NAME = "key_value";
 const MINUTES_UNTIL_STALE = 30;
