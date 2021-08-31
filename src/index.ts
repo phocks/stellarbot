@@ -10,6 +10,7 @@ import { open } from "sqlite";
 import isStale from "../lib/isStale";
 
 const DB_TABLE_NAME = "key_value";
+const MINUTES_UNTIL_STALE = 60;
 
 const accountAddress = process.env.stellar_public;
 const server = new StellarSdk.Server("https://horizon.stellar.org");
@@ -100,33 +101,71 @@ const main = async () => {
     const created_at: string = payment.created_at;
     const memo: string = transaction.memo;
     const transactionId = transaction.id;
+    const expertUrl = `https://stellar.expert/explorer/public/tx/${transactionId}`;
+    const amount = payment.amount;
+    const assetType = payment.asset_type;
 
+    // console.log(payment);
     console.log("Created at:", created_at);
     console.log("Paging token:", payment.paging_token);
     console.log("Memo:", memo);
-    console.log("Amount:", payment.amount);
-    console.log("Asset type", payment.asset_type);
+    console.log("Amount:", amount);
+    console.log("Asset type", assetType);
     console.log("Asset code", payment.asset_code);
     console.log("Transaction ID:", transactionId);
 
     let doTweet = true;
-    if (isStale(created_at, 30)) doTweet = false;
+    if (isStale(created_at, MINUTES_UNTIL_STALE)) doTweet = false;
+    if (assetType !== "native") doTweet = false;
 
     // Check if we want to tweet
     if (!doTweet) {
-      console.log("Payment is stale. Not processing.");
+      console.log("Something is up. Don't tweet...");
     } else {
       // Tweet something here
-      const url = `https://stellar.expert/explorer/public/tx/${transactionId}`;
+      // We want something like:
+      // Received AMOUNT Stellar Lumens from SENDER_ADDRESS with
+      // memo MESSAGE url etc etc
+
+      // Get account balance first
+      let xlmBalance = null;
+
+      const [accountError, account]: [Error | null, any] = await to(
+        server.loadAccount(accountAddress)
+      );
+
+      if (accountError) {
+        console.error(accountError);
+      } else {
+        console.log("Balances for account: " + accountAddress);
+        account.balances.forEach(function (balance: any) {
+          console.log(
+            "Type:",
+            balance.asset_type,
+            " Balance:",
+            balance.balance
+          );
+
+          if (balance.asset_type === "native") {
+            xlmBalance = balance.balance;
+          }
+        });
+      }
+
       const [tweetError, tweetResult] = await to(
         client.post("statuses/update", {
-          status: `URL: ${url}`,
+          status: `XLM RECEIVED!!
+${parseFloat(amount)} Stellar Lumens
+Memo: ${memo}
+Balance: ${xlmBalance}
+URL: ${expertUrl}`,
         })
       );
       if (tweetError) {
         console.error(tweetError);
       } else {
-        console.log(tweetResult);
+        console.log("Tweeted!");
+        // console.log(tweetResult);
       }
     }
 
