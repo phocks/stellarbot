@@ -10,7 +10,7 @@ import { open } from "sqlite";
 import isStale from "../lib/isStale";
 
 const DB_TABLE_NAME = "key_value";
-const MINUTES_UNTIL_STALE = 60;
+const MINUTES_UNTIL_STALE = 21;
 
 const accountAddress = process.env.stellar_public;
 const server = new StellarSdk.Server("https://horizon.stellar.org");
@@ -60,7 +60,7 @@ const main = async () => {
       pagingToken = dbResult.count;
 
       // Override paging token (for testing)
-      pagingToken = "158281815579824129";
+      // pagingToken = "158281815579824129";
     }
   }
 
