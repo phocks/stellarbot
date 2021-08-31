@@ -10,7 +10,7 @@ import { open } from "sqlite";
 import isStale from "../lib/isStale";
 
 const DB_TABLE_NAME = "key_value";
-const MINUTES_UNTIL_STALE = 21;
+const MINUTES_UNTIL_STALE = 30;
 
 const accountAddress = process.env.stellar_public;
 const server = new StellarSdk.Server("https://horizon.stellar.org");
@@ -128,7 +128,7 @@ const main = async () => {
       // memo MESSAGE url etc etc
 
       // Get account balance first
-      let xlmBalance = null;
+      let xlmBalance = "0";
 
       const [accountError, account]: [Error | null, any] = await to(
         server.loadAccount(accountAddress)
@@ -157,7 +157,7 @@ const main = async () => {
           status: `XLM RECEIVED!!
 ${parseFloat(amount)} Stellar Lumens
 Memo: ${memo}
-Balance: ${xlmBalance}
+Balance: ${parseFloat(xlmBalance)}
 URL: ${expertUrl}`,
         })
       );
